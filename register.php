@@ -4,7 +4,7 @@
     header("Access-Control-Allow-Headers: *");
 
     require "vendor/autoload.php";
-    use Mynamespace\auth;
+    use Mynamespace\register_login;
 
 
     if($_SERVER["REQUEST_METHOD"] == "POST"){
@@ -15,7 +15,7 @@
         $email = $request -> email;
         $password = $request -> password;
 
-        $auth = new auth();
+        $auth = new register_login();
         $auth -> register($firstname, $lastname, $email, $password);
         
     }

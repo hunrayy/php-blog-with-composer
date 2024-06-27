@@ -3,7 +3,7 @@
     use Mynamespace\Configure;
     $session = session_start();
 
-    class Auth{
+    class Register_login{
         //register function
         public function register($firstname, $lastname, $email, $password){
             $configuration = new Configure();
@@ -23,19 +23,54 @@
                 echo "invalid user info";
             }else{
                 try{
-                    $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+                   /**fetch from the users' table
+                    if there isn't any data there, insert the current data with a `role_id` of 1 
+                    else insert the current data with a `role_id` of 2 */
+                    $query = "SELECT * FROM `users`";
+                    $feedback = mysqli_query($_conn, $query);
+                    echo json_encode($feedback);
+                    if ($feedback) {
+                        $role_id = mysqli_num_rows($feedback) > 0 ? 2 : 1; 
+                        $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+                        $query = "INSERT INTO `users` (`firstname`, `lastname`, `email`, `password`, `status`, `role_id`) VALUES (?, ?, ?, ?, ?, ?)";
+                        $stmt = mysqli_prepare($_conn, $query);
+                        $status = 0;
+                        mysqli_stmt_bind_param($stmt, "ssssii", $firstname, $lastname, $email, $hashed_password, $status, $role_id);
+                        $result = mysqli_stmt_execute($stmt);
+    
+                        if ($result) {
+                            $user_id = mysqli_insert_id($_conn);
+                            $_SESSION['user_id'] = $user_id;
+                            $_SESSION['user_email'] = $email;
+                            $_SESSION['user_role'] = $role_id;
+    
+                            $message = $role_id == 1 ? "Super-admin's account successfully created" : "Account successfully created";
+                            echo $message;
+                            return json_encode([
+                                "code" => "success",
+                                "message" => $message
+                            ]);
+                        }
+                    } else {
+                        echo "Query failed: " . mysqli_error($_conn);
+                    }
 
-                    $query = "INSERT INTO `users` (`firstname`, `lastname`, `email`, `password`) VALUES (?, ?, ?, ?)";
-                    $stmt = mysqli_prepare($_conn, $query);
-                    mysqli_stmt_bind_param($stmt, "ssss", $firstname, $lastname, $email, $hashed_password);
-                    $result = mysqli_execute($stmt);
-                    if($result){
-                        json_encode([
-                            "code" => "success",
-                            "message" => "Account successfully created"
-                        ]);
-                        echo "Account successfully created";
-                    };
+
+                    // $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+
+                    // $query = "INSERT INTO `users` (`firstname`, `lastname`, `email`, `password`, `status`, `role`id) VALUES (?, ?, ?, ?, ?, ?)";
+                    // $stmt = mysqli_prepare($_conn, $query);
+                    // mysqli_stmt_bind_param($stmt, "ssssii", $firstname, $lastname, $email, $hashed_password, 0, 0);
+                    // $result = mysqli_execute($stmt);
+                    // echo $result;
+                    // if($result){
+                    //     $user_id = mysqli_insert_id($_conn);
+                    //     echo "Account successfully created, id is $user_id";
+                    //     return json_encode([
+                    //         "code" => "success",
+                    //         "message" => "Account successfully created"
+                    //     ]);
+                    // };
                     
                 }catch(Exception $e){
                     json_encode([
@@ -53,6 +88,7 @@
         public function login($email, $password){
             $configuration = new Configure();
             $_conn = $configuration->config();
+
 
             if(!$email || !$password){
                 $message = "All fields required";
@@ -85,9 +121,14 @@
                             ]);
                         }else{
                             //the user's account exists and the password match...proceed
-                            $message = "Login Success";
+                            // echo json_encode($userdata);
+                            $_SESSION['user_id'] = $id;
+                            $_SESSION['user_email'] = $email;
+                            $_SESSION['user_role'] = $userdata['role_id'];
+
+                            $id = $userdata['id'];  
+                            $message = $id = 1 ? "Super Admin Login Success" : "Login success";
                             echo $message;
-                            
                             return json_encode([
                                 "message" => $message,
                                 "code" => "sucess"
@@ -107,14 +148,15 @@
                       
                     
                 }catch(Exception $e){
-                    echo "error $e";
+                    return json_encode([
+                        "message" => "Account could not be created, please retry",
+                        "code" => "error",
+                        "reason" => $e
+                    ]);
                 }
-                // return json_encode([
-                //     "message" => "All fields required",
-                //     "code" => "error"
-                // ]);
             }
         }
+        // med-cime
 
 
 

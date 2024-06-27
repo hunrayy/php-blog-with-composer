@@ -5,7 +5,7 @@
             $_host = "localhost";
             $_user = "root";
             $_password = "";
-            $_db = "store_db";
+            $_db = "test";
             
             try{
                 $_conn = mysqli_connect($_host, $_user, $_password, $_db);
