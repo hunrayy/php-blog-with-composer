@@ -4,13 +4,13 @@
     header("Access-Control-Allow-Headers: *");
 
     require "vendor/autoload.php";
-    use Mynamespace\getCategories;
+    use Mynamespace\getUsers;
 
 
     if($_SERVER["REQUEST_METHOD"] == "GET"){
         $data = file_get_contents("php://input");
-        $feedback = new getCategories();
-        $feedback -> getCategories();
+        $feedback = new getUsers();
+        $feedback -> getUsers();
     }
 
 ?>

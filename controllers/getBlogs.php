@@ -2,13 +2,13 @@
     namespace Mynamespace;
     use Mynamespace\Configure;
 
-    class GetCategories{
+    class GetBlogs{
         
-        public function getCategories(){
+        public function getBlogs(){
             $configuration = new Configure();
             $_conn = $configuration->config();
 
-            $sql = "SELECT * FROM `category`";
+            $sql = "SELECT * FROM `articles`";
             $query = mysqli_query($_conn, $sql);
             $categories = mysqli_fetch_all($query, MYSQLI_ASSOC);
             if(!$query){

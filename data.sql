@@ -12,8 +12,8 @@ CREATE TABLE IF NOT EXISTS `role`(
 );
 -- insert into role's table --
 INSERT INTO `role` (`type`, `privilege_id`) VALUES ('super-admin', '["1", "2", "3", "4", "5"]');
+INTO `role` (`type`, `privilege_id`) VALUES ('author-admin', '["1", "2"]');
 INSERT INTO `role` (`type`, `privilege_id`) VALUES ('user', null);
-INTO `role` (`type`, `privilege_id`) VALUES ('author', '["1", "2"]');
 
 -- users' table --
 CREATE TABLE IF NOT EXISTS `users`(
