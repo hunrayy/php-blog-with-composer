@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS `role`(
 -- insert into role's table --
 INSERT INTO `role` (`type`, `privilege_id`) VALUES ('super-admin', '["1", "2", "3", "4", "5"]');
 INSERT INTO `role` (`type`, `privilege_id`) VALUES ('user', null);
+INTO `role` (`type`, `privilege_id`) VALUES ('author', '["1", "2"]');
 
 -- users' table --
 CREATE TABLE IF NOT EXISTS `users`(
@@ -56,7 +57,7 @@ CREATE TABLE IF NOT EXISTS `articles`(
     `category_id` INT NOT NULL,
     `user_id(author)` INT NOT NULL,
     `registered_at` timestamp NOT NULL DEFAULT CURRENT_TIME,
-    `user_id(editor)` INT NOT NULL,
+    `user_id(editor)` INT,
     `updated_at` timestamp DEFAULT CURRENT_TIME,
     CONSTRAINT `category_auth` FOREIGN KEY (`category_id`) REFERENCES `category`(`id`) ON DELETE CASCADE,
     CONSTRAINT `author_auth` FOREIGN KEY (`user_id(author)`) REFERENCES `users`(`id`) ON DELETE CASCADE,

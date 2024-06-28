@@ -1,83 +1,111 @@
 <?php
     namespace Mynamespace;
     use Mynamespace\Configure;
+    use Mynamespace\Authorization;
     
     class TurnUserToAuthor{
         function userToAuthor($superAdminEmail, $userfname, $userlname, $useremail){
             $configuration = new Configure();
             $_conn = $configuration->config();
 
-
-            trim($superAdminEmail);
-            trim($userfname);
-            trim($userlname);
-            trim($useremail);
-            mysqli_real_escape_string($_conn, trim($userfname));
-            mysqli_real_escape_string($_conn, trim($userlname));
-            // echo $superAdminEmail, $userfname, $userlname, $useremail, $userpassword;
-            if(empty($superAdminEmail) || empty($userfname) || empty($userlname) || empty($useremail)){
-                echo "invalid data";
-                return json_encode([
-                    "message" => "invaid data",
-                    "error" => "invalid data"
-                ]);
-            }else{
-                
-                $checkIfSuperAdmin = "SELECT * FROM `admins` WHERE `id` = 1";
-                $result = mysqli_query($_conn, $checkIfSuperAdmin);
-                if($result){
-                    $feedback = mysqli_fetch_assoc($result);
-                    $verifiedSuperAdminEmail = json_decode(json_encode($feedback))->email;
-                    // echo $superAdminEmail;
-                    if($verifiedSuperAdminEmail == $superAdminEmail){
-                        echo "working";
-                        //yes...the verified super admin is the trying to make this function
-                        //get the user details form the `users` table
+            $authorization = new Authorization();
+            $feedback = $authorization->validate_user($useremail);
             
-                        $getUser = "SELECT * FROM `users` WHERE `firstname` = '$userfname'AND `lastname` = '$userlname' AND `email` = '$useremail'";
-                        $result = mysqli_query($_conn, $getUser);
+            echo json_encode($feedback);
+            // data from $feedback would return either null or an array of privileges(array of numbers)
+            if($feedback == null){
+                //unauthorized user trying to make request
+                http_response_code(401);
+                $message = "Unauthorized user making request";
+                $response = array("status" => "Fail", "message" => $message);
+                echo json_encode($response);
+                return $response;
+            }else{
+                //this is an admin making request but confirm if permitted
+                // print_r($feedback);
+                $in_array = in_array(4, $feedback); //4 is the id privilege for creating admin
+                (int)$in_array;
+                // echo (int)$in_array;
+
+                if((int)$in_array == 0){
+                    //id 4 is not in the privileges
+                    http_response_code(401);
+                    $message = "Unauthorized admin making request";
+                    $response = array("status" => "Fail", "message" => $message);
+                    echo json_encode( $response);
+                    return $response;
+                }
+                //id 4 is among the privileges, proceed
+                mysqli_real_escape_string($_conn, trim($superAdminEmail));
+                mysqli_real_escape_string($_conn, trim($userfname));
+                mysqli_real_escape_string($_conn, trim($userlname));
+                mysqli_real_escape_string($_conn, trim($useremail));
+                // echo $superAdminEmail, $userfname, $userlname, $useremail, $userpassword;
+
+                if(empty($superAdminEmail) || empty($userfname) || empty($userlname) || empty($useremail)){
+                    http_response_code(401);
+                    $message = "Inavlid data";
+                    $response = array("status" => "Fail", "message" => $message);
+                    echo json_encode($response);
+                    return $response;
+                }else{
+                    try{
+                        //ensure the user being turned to an author exists
+                        $getUser = "SELECT * FROM `users` WHERE `firstname` = ? AND `lastname` = ? AND `email` = ? ";
+                        $query = mysqli_prepare($_conn, $getUser);
+                        mysqli_stmt_bind_param($query, "sss", $userfname, $userlname, $useremail);
+                        mysqli_execute($query);
+                        $result = mysqli_stmt_get_result($query);
                         if($result){
+                            //the user being turned to an author admin exists, proceed to change the role_id
                             $feedback = mysqli_fetch_assoc($result);
                             // echo json_encode($feedback);
                             if($feedback == null){
-                                echo "User not found";
+                                // Feedback does not exist
+                                http_response_code(404);
+                                $message = "User not found";
+                                $response = array("status" => "Fail", "message" => $message);
+                                echo json_encode($response);
+                                return $response;
                             }else{
-                                $firstname = json_decode(json_encode($feedback)) ->firstname;
-                                $lastname = json_decode(json_encode($feedback)) ->lastname;
-                                $email = json_decode(json_encode($feedback)) ->email;               
-                                $password = json_decode(json_encode($feedback)) ->password;               
-                                $insertIntoAdmins = "INSERT INTO `admins`(`firstname`, `lastname`, `email`, `password`, `role_id`, `status`) VALUES ('$firstname', '$lastname', '$email', '$password', 2, 0)";
-                                $result = mysqli_query($_conn, $insertIntoAdmins);
-                                if($result){
-                                    //user has successfully been made an admin(author), next...delete the user from the `users` table
-                                    $getUser = "DELETE FROM `users` WHERE `firstname` = '$firstname' AND `lastname` = '$lastname' AND `email` = '$email'";
-                                    $result = mysqli_query($_conn, $getUser);
-                                    if($result){
-                                        echo "user table with firstname: $firstname, lastname: $lastname, and email: $email has successfully been made an Author admin";
-                                        return json_encode([
-                                            "messsage" => "user successfully made an admin(author)",
-                                            "code" => "success"
-                                        ]); 
-                                    };
-        
-                                };
+                                $role_id = $feedback['role_id'];
+                                // echo $role_id;
+                                // change role_id to 3. 3 is the role_id for an author
+                                $get_user_id = $authorization->get_user_id($useremail);
+                                $user_id = $get_user_id['id'];
+                                $sql = "UPDATE `users` SET `role_id` = ? WHERE `id` = ?";
+                                $query = mysqli_prepare($_conn, $sql);
+                                $role_id = 3;
+                                mysqli_stmt_bind_param($query, "ii", $role_id, $user_id);
+                                mysqli_execute($query);
+                                if(mysqli_stmt_affected_rows($query) == 1){
+                                    http_response_code(200);
+                                    $message = "user with the email $useremail was successfully made an author";
+                                    $response = array("status" => "success", "message" => $message);
+                                    echo json_encode($response);
+                                    return $response;
+                                }else {
+                                    http_response_code(200);
+                                    $message = "User already an author admin";
+                                    $response = array("status" => "failure", "message" => $message);
+                                    echo json_encode($response);
+                                    return $response;
+                                }
                             }
-    
-                        };
-    
-                    }else if($verifiedSuperAdminEmail !== $superAdminEmail){
-                        //the super admin isn't the one making this request
-                        echo "Unauthorized admin making request";
-                        return json_encode([
-                            "message" => "Unauthorized admin making request",
-                            "error" => "unauthorized admin"
-                        ]);
-                    };
-                    
-                    
+                        }
+                    }catch(Exception $e){
+                        $message = "Database error: " . $e->getMessage();
+                        $response = array("status" => "error", "message" => $message);
+                        echo $response;
+                        return $response;
+                    }
+                        
+                        
                 };
+                
+
             }
-            
         }
     }
+
 ?>

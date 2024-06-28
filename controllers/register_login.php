@@ -44,7 +44,7 @@
                             $_SESSION['user_email'] = $email;
                             $_SESSION['user_role'] = $role_id;
     
-                            $message = $role_id == 1 ? "Super-admin's account successfully created" : "Account successfully created";
+                            $message = $role_id == 1 ? "Super admin's account successfully created" : "Account successfully created";
                             echo $message;
                             return json_encode([
                                 "code" => "success",
@@ -122,17 +122,17 @@
                         }else{
                             //the user's account exists and the password match...proceed
                             // echo json_encode($userdata);
-                            $_SESSION['user_id'] = $id;
-                            $_SESSION['user_email'] = $email;
-                            $_SESSION['user_role'] = $userdata['role_id'];
-
+                            
+                            
                             $id = $userdata['id'];  
-                            $message = $id = 1 ? "Super Admin Login Success" : "Login success";
-                            echo $message;
-                            return json_encode([
-                                "message" => $message,
-                                "code" => "sucess"
-                            ]);
+                            $_SESSION['user_id'] = $id;
+                            echo $id;
+
+                            $message = $id == 1 ? "Super Admin Login Success" : "Login success";
+                            
+                            $feedback = array("message" => $message, "code" => "sucess");
+                            echo json_encode($feedback);
+                            return $feedback;
 
                         }
 
@@ -149,7 +149,7 @@
                     
                 }catch(Exception $e){
                     return json_encode([
-                        "message" => "Account could not be created, please retry",
+                        "message" => "Login not successful, please retry",
                         "code" => "error",
                         "reason" => $e
                     ]);

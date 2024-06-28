@@ -10,7 +10,7 @@
             try{
                 $_conn = mysqli_connect($_host, $_user, $_password, $_db);
                 if($_conn){
-                    echo "connected";
+                    // echo "connected";
                     return $_conn;
                 }else{
                     echo "unable to connect";
