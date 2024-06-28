@@ -64,37 +64,7 @@
                     $response = array("status" => "error", "message" => $message);
                     echo json_encode($response);
                 }
-                
-                
-
-
-
-
-
-
-
-
-
             }
-    
-            // $getAdmin = "SELECT * FROM `admins` WHERE `firstname` = '$authorFirstName' AND `lastname` = '$authorLastName' AND `email` = '$authorEmail' AND `role_id` = 2";
-            // $result = mysqli_query($_conn, $getAdmin);
-            // if(mysqli_num_rows($result) == 1){
-            //     $feedback = mysqli_fetch_assoc($result);
-            //     // echo json_encode($feedback);
-    
-            //     
-    
-            //     $id = json_decode(json_encode($feedback)) -> id;
-
-            // }else{
-            //     echo "unauthorized admin making request";
-            //     return json_encode([
-            //         "message" => "unauthorized admin making request",
-            //         "code" => "error"
-            //     ]);
-            // }
-    
         }
     }
 
