@@ -10,6 +10,8 @@
     if($_SERVER["REQUEST_METHOD"] == "GET"){
         $data = file_get_contents("php://input");
         $feedback = new getUsers();
+
+        
         $feedback -> getUsers();
     }
 
