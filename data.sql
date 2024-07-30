@@ -54,6 +54,7 @@ CREATE TABLE IF NOT EXISTS `articles`(
     `id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
     `title` TEXT NOT NULL,
     `content` LONGTEXT NOT NULL,
+    `image` VARCHAR(255),
     `category_id` INT NOT NULL,
     `user_id(author)` INT NOT NULL,
     `registered_at` timestamp NOT NULL DEFAULT CURRENT_TIME,
@@ -82,3 +83,4 @@ CREATE TABLE IF NOT EXISTS `articles`(
 -- -- `user_id` and `category_id` on `articles` table
 -- ALTER TABLE `articles`,
 -- ADD 
+

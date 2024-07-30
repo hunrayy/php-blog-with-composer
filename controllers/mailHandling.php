@@ -4,55 +4,56 @@
     use PHPMailer\PHPMailer\Exception;
 
     use Dotenv\Dotenv; //file for environmetal variables
-    $dotenv = Dotenv::createImmutable(__DIR__); // Create an instance of Dotenv to load environment variables
+    $dotenv = Dotenv::createImmutable(__DIR__ . '/../'); // Create an instance of Dotenv to load environment variables
     $dotenv->load(); // Load environment variables from .env file 
 
     class MailHandling {
         public function registrationMail($firstname, $email){
             require 'vendor/autoload.php';
 
-            // Instantiation and passing `true` enables exceptions
-            $mail = new PHPMailer(true);
-        
+            $mail = new PHPMailer(true); // Passing `true` enables exceptions
+            // die(getenv('SMTP_PASSWORD'));
+
             try {
-                //Server settings
                 $mail->isSMTP();                                            // Send using SMTP
                 $mail->Host       = 'smtp.gmail.com';                     // Set the SMTP server to send through
                 $mail->SMTPAuth   = true;                                   // Enable SMTP authentication
-                $mail->Username   = $_ENV['SMPT_USERNAME'];               // SMTP username
-                $mail->Password   = $_ENV['SMPT_PASSWORD'];                        // SMTP password
-                $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;         // Enable TLS encryption; `PHPMailer::ENCRYPTION_SMTPS` encouraged
-                $mail->Port       = 587;                                    // TCP port to connect to, use 465 for `PHPMailer::ENCRYPTION_SMTPS` above
+                $mail->Username   = $_ENV['SMTP_USERNAME'];               // SMTP username
+                $mail->Password   = $_ENV['SMTP_PASSWORD'];                        // SMTP password
+                $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;         // Enable TLS encryption
+                $mail->Port       = 587;
 
-        
-                // $mail->SMTPOptions = array(
-                //     'ssl' => array(
-                //         'verify_peer' => true,
-                //         'verify_peer_name' => true,
-                //         // 'allow_self_signed' => true
-                //     )
-                // );
-                //Recipients
-                $mail->setFrom('henryokiyi8@gmail.com', 'Naijaoversabi');
-                $mail->addAddress("$email");     // Add a recipient
-                // Content
-                $mail->isHTML(true);                                  // Set email format to HTML
+                $mail->SMTPOptions = array(
+                    'ssl' => array(
+                        'verify_peer' => false,
+                        'verify_peer_name' => false,
+                        'allow_self_signed' => true
+                    )
+                );
+
+                // Sender and recipient settings
+                $mail->setFrom('henryokiyi8@gmail.com', 'henry');
+                $mail->addAddress("$email", "$firstname");
+
+                // Sending plain text email
+                $mail->isHTML(false); // Set email format to plain text
                 $mail->Subject = 'Greetings';
-                $mail->Body    = "<p>Hi $firstname, welcome to the Naijaoversabi</p>";
-        
+                $mail->Body    = "hi $firstname, welcome to Naijaoversabi";
+
+                // Send the email
                 $mail->send();
-                echo 'Email has been sent successfully';
+                if(!$mail->send()){
+                    echo 'Message could not be sent. Mailer Error: ' . $mail->ErrorInfo;
+                } else {
+                    echo 'Message has been sent';
+                }
             } catch (Exception $e) {
-                echo "Email could not be sent. Mailer Error: {$mail->ErrorInfo}";
+                echo "Message could not be sent. Mailer Error: {$mail->ErrorInfo}";
             }
+
         }
     }
     
-
-
-
-
-
 
 
 

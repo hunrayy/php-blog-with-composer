@@ -2,7 +2,8 @@
     namespace Mynamespace;
     use Mynamespace\Configure;
     use Mynamespace\MailHandling;
-    $session = session_start();
+    
+    session_start();
 
     class Register_login{
         //register function
@@ -89,83 +90,74 @@
             }
         }
 
-        //login function
-        public function login($email, $password){
+        // login function
+        public function login($email, $password) {
             $configuration = new Configure();
             $_conn = $configuration->config();
-
-
-            if(!$email || !$password){
+    
+            if (empty($email) || empty($password)) {
                 $message = "All fields required";
-                echo $message;
-                return json_encode([
+                echo json_encode([
                     "message" => $message,
                     "code" => "error"
                 ]);
-            }else{
-
+                return;
+            } else {
                 $email = mysqli_real_escape_string($_conn, trim($email));
                 $password = mysqli_real_escape_string($_conn, trim($password));
-                try{
-                    
-
+    
+                try {
                     $query = "SELECT * FROM `users` WHERE `email` = ? LIMIT 1";
-                    $result = mysqli_prepare($_conn, $query);
-                    mysqli_stmt_bind_param($result, "s", $email);
-                    mysqli_stmt_execute($result);
-                    $stmt_result = mysqli_stmt_get_result($result);
-                    
-
-
-                    if(mysqli_num_rows($stmt_result) == 1){
-                        $userdata = mysqli_fetch_assoc($stmt_result);
+                    $stmt = mysqli_prepare($_conn, $query);
+                    mysqli_stmt_bind_param($stmt, "s", $email);
+                    mysqli_stmt_execute($stmt);
+                    $result = mysqli_stmt_get_result($stmt);
+    
+                    if (mysqli_num_rows($result) == 1) {
+                        $userdata = mysqli_fetch_assoc($result);
                         $stored_password = $userdata['password'];
-                        if(!password_verify($password, $stored_password)){
-                            //the user's account exists but the password does not match
+    
+                        if (!password_verify($password, $stored_password)) {
                             $message = "Invalid credentials";
-                            echo $message;
-                            return json_encode([
+                            echo json_encode([
                                 "message" => $message,
                                 "code" => "error"
                             ]);
-                        }else{
-                            //the user's account exists and the password match...proceed
-                            // echo json_encode($userdata);
-                            
-                            
-                            $id = $userdata['id'];  
+                            return;
+                        } else {
+                            $id = $userdata['id'];
                             $_SESSION['user_id'] = $id;
-                            echo $id;
-
+                            $_SESSION['user_email'] = $email;
+                            $_SESSION['user_role'] = $userdata['role_id'];
+    
                             $message = $id == 1 ? "Super Admin Login Success" : "Login success";
-                            
-                            $feedback = array("message" => $message, "code" => "sucess");
-                            echo json_encode($feedback);
-                            return $feedback;
-
+                            setcookie(session_name(), session_id(), time() + 3600, "/");
+    
+                            echo json_encode([
+                                "message" => $message,
+                                "code" => "success"
+                            ]);
+                            return;
                         }
-
-                    }else{
-                        //the user's account does not exist
+                    } else {
                         $message = "Invalid credentials";
-                        echo $message;
-                        return json_encode([
+                        echo json_encode([
                             "message" => $message,
                             "code" => "error"
                         ]);
+                        return;
                     }
-                      
-                    
-                }catch(Exception $e){
-                    return json_encode([
+                } catch (Exception $e) {
+                    echo json_encode([
                         "message" => "Login not successful, please retry",
                         "code" => "error",
-                        "reason" => $e
+                        "reason" => $e->getMessage()
                     ]);
+                    return;
                 }
             }
         }
-        // med-cime
+
 
 
 
